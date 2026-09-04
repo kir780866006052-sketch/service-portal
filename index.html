@@ -93,9 +93,17 @@
   }
   .brand .portal-name{
     font-family:"Zen Kaku Gothic New","Noto Sans JP",sans-serif;
-    font-size:clamp(18px,4.2vw,24px);
+    font-size:clamp(22px,5.4vw,32px);
     font-weight:700;
     color:#fff;
+  }
+  .brand .portal-name-en{
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:#BFD4E6;
+    font-weight:500;
+    margin-top:2px;
   }
   .settings-btn{
     width:44px;
@@ -259,7 +267,7 @@
 
   .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
     gap:14px;
   }
 
@@ -272,7 +280,7 @@
     text-decoration:none;
     color:var(--ink);
     overflow:hidden;
-    min-height:76px;
+    min-height:96px;
     transition:border-color .15s ease, background .15s ease;
     position:relative;
     cursor:pointer;
@@ -310,6 +318,19 @@
   .pin-toggle svg{width:15px;height:15px;color:var(--line-strong);}
   .pin-toggle.pinned svg{color:var(--amber);}
 
+  .qr-thumb{
+    flex-shrink:0;
+    width:90px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#fff;
+    border-left:1px solid var(--line);
+    padding:8px;
+    cursor:zoom-in;
+  }
+  .qr-thumb svg{display:block;width:64px;height:64px;}
+
   .qr-modal-body{
     display:flex;
     flex-direction:column;
@@ -344,12 +365,14 @@
   .site-card:hover .accent-bar{width:9px;}
 
   .card-body{
-    padding:14px 40px 14px 16px;
+    position:relative;
+    padding:14px 34px 14px 16px;
     display:flex;
     flex-direction:column;
     justify-content:center;
     gap:4px;
     min-width:0;
+    flex:1;
   }
   .card-mark{
     width:30px;
@@ -734,6 +757,7 @@
   <div class="brand">
     <span class="company">函館日産自動車株式会社</span>
     <span class="portal-name">サービス ポータル</span>
+    <span class="portal-name-en">Service Portal</span>
   </div>
   <div class="header-right">
     <div class="search-wrap compact">
@@ -896,12 +920,31 @@
     renderGrid();
   }
 
+  function buildQrSvg(url, cellSize){
+    try{
+      var qr = qrcode(0, 'M');
+      qr.addData(url);
+      qr.make();
+      return qr.createSvgTag({ cellSize: cellSize || 2, margin: 1 });
+    }catch(e){
+      return '';
+    }
+  }
+
   gridArea.addEventListener('click', function(e){
     var pinBtn = e.target.closest ? e.target.closest('.pin-toggle') : null;
     if(pinBtn){
       e.preventDefault();
       e.stopPropagation();
       togglePin(pinBtn.getAttribute('data-id'));
+      return;
+    }
+    var qrThumb = e.target.closest ? e.target.closest('.qr-thumb') : null;
+    if(qrThumb){
+      e.preventDefault();
+      e.stopPropagation();
+      var qsite = sites.find(function(s){ return s.id === qrThumb.getAttribute('data-id'); });
+      if(qsite) openQrModal(qsite);
       return;
     }
     var card = e.target.closest ? e.target.closest('.site-card') : null;
@@ -1121,18 +1164,19 @@
       var subtitle = site.note ? site.note : hostname(site.url);
       html +=
         '<div class="site-card" data-url="' + escapeAttr(site.url) + '" tabindex="0" role="link">' +
-          '<span class="card-badges">' +
-            '<button type="button" class="pin-toggle' + (site.pinned ? ' pinned' : '') + '" data-id="' + site.id + '" aria-label="ピン留め切り替え">' +
-              '<svg viewBox="0 0 24 24" fill="' + (site.pinned ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.8"><path d="M12 2l2.2 6.6L21 9l-5.5 4.3L17 20l-5-3.6L7 20l1.5-6.7L3 9l6.8-.4z"/></svg>' +
-            '</button>' +
-            (isNew ? '<span class="new-badge">NEW</span>' : '') +
-          '</span>' +
           '<span class="accent-bar" style="background:' + color + '"></span>' +
           '<span class="card-body">' +
+            '<span class="card-badges">' +
+              '<button type="button" class="pin-toggle' + (site.pinned ? ' pinned' : '') + '" data-id="' + site.id + '" aria-label="ピン留め切り替え">' +
+                '<svg viewBox="0 0 24 24" fill="' + (site.pinned ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.8"><path d="M12 2l2.2 6.6L21 9l-5.5 4.3L17 20l-5-3.6L7 20l1.5-6.7L3 9l6.8-.4z"/></svg>' +
+              '</button>' +
+              (isNew ? '<span class="new-badge">NEW</span>' : '') +
+            '</span>' +
             '<span class="' + markClass + '" style="background:' + color + '">' + markContent + '</span>' +
             '<span class="card-name">' + escapeHtml(site.name) + '</span>' +
             '<span class="card-url">' + escapeHtml(subtitle) + '</span>' +
           '</span>' +
+          '<span class="qr-thumb" data-id="' + site.id + '" aria-label="QRコードを拡大表示">' + buildQrSvg(site.url, 2) + '</span>' +
         '</div>';
     });
     html += '</div>';
@@ -1424,15 +1468,8 @@
   function openQrModal(site){
     qrModalTitle.textContent = site.name;
     qrModalUrl.textContent = site.url;
-    qrImgContainer.innerHTML = '';
-    try{
-      var qr = qrcode(0, 'M');
-      qr.addData(site.url);
-      qr.make();
-      qrImgContainer.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2 });
-    }catch(e){
-      qrImgContainer.innerHTML = '<p class="drawer-note">QRコードを生成できませんでした。</p>';
-    }
+    var svg = buildQrSvg(site.url, 4);
+    qrImgContainer.innerHTML = svg || '<p class="drawer-note">QRコードを生成できませんでした。</p>';
     qrOverlay.classList.add('open');
     qrModal.classList.add('open');
   }
