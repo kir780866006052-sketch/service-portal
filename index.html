@@ -73,37 +73,30 @@
     flex-wrap:wrap;
     gap:10px 14px;
     box-shadow:0 1px 0 rgba(0,0,0,0.08);
+    min-height:72px;
   }
   .header-right{
     display:flex;
     align-items:center;
     gap:10px;
-    margin-left:auto;
+    flex:0 0 auto;
   }
   .brand{
+    flex:1 1 auto;
     display:flex;
-    flex-direction:column;
-    line-height:1.3;
+    align-items:center;
+    justify-content:center;
+    min-width:0;
   }
-  .brand .company{
-    font-size:12px;
-    letter-spacing:.04em;
-    color:#BFD4E6;
-    font-weight:500;
-  }
-  .brand .portal-name{
+  .brand-text{
     font-family:"Zen Kaku Gothic New","Noto Sans JP",sans-serif;
-    font-size:clamp(22px,5.4vw,32px);
-    font-weight:700;
+    font-size:clamp(20px,4.2vw,29px);
+    font-weight:600;
     color:#fff;
-  }
-  .brand .portal-name-en{
-    font-size:11px;
-    letter-spacing:.12em;
-    text-transform:uppercase;
-    color:#BFD4E6;
-    font-weight:500;
-    margin-top:2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    letter-spacing:.01em;
   }
   .settings-btn{
     width:44px;
@@ -755,15 +748,19 @@
 
 <header>
   <div class="brand">
-    <span class="company">函館日産自動車株式会社</span>
-    <span class="portal-name">サービス ポータル</span>
-    <span class="portal-name-en">Service Portal</span>
+    <span class="brand-text">函館日産自動車　Service Portal</span>
   </div>
   <div class="header-right">
     <div class="search-wrap compact">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <input class="search-input" id="searchInput" type="text" placeholder="検索">
     </div>
+    <button class="settings-btn" id="installBtn" aria-label="ホーム画面に追加" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="5" y="2" width="14" height="20" rx="2"/>
+        <path d="M12 9v6M9 12h6"/>
+      </svg>
+    </button>
     <button class="settings-btn" id="themeToggle" aria-label="ダークモード切替">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" id="themeIcon">
         <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>
@@ -869,6 +866,15 @@
   </div>
   <div class="edit-actions">
     <button class="btn btn-outline btn-block" id="qrClose">閉じる</button>
+  </div>
+</div>
+
+<div class="overlay" id="installOverlay"></div>
+<div class="password-modal" id="installModal" role="dialog" aria-label="ホーム画面に追加">
+  <p class="pw-title" id="installModalTitle">ホーム画面に追加</p>
+  <p class="drawer-note" id="installModalBody" style="margin:0 0 4px;"></p>
+  <div class="edit-actions">
+    <button class="btn btn-outline btn-block" id="installClose">閉じる</button>
   </div>
 </div>
 
@@ -1485,6 +1491,7 @@
       closeDrawer();
       closePasswordGate();
       closeQrModal();
+      closeInstallModal();
     }
   });
 
@@ -1515,6 +1522,52 @@
     var next = current === 'dark' ? 'light' : 'dark';
     applyTheme(next);
     try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  });
+
+  var installBtn = document.getElementById('installBtn');
+  var installOverlay = document.getElementById('installOverlay');
+  var installModal = document.getElementById('installModal');
+  var installModalBody = document.getElementById('installModalBody');
+  var deferredInstallPrompt = null;
+
+  var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  if(!isStandalone){
+    installBtn.style.display = '';
+  }
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if(!isStandalone) installBtn.style.display = '';
+  });
+
+  function openInstallModal(bodyText){
+    installModalBody.textContent = bodyText;
+    installOverlay.classList.add('open');
+    installModal.classList.add('open');
+  }
+  function closeInstallModal(){
+    installOverlay.classList.remove('open');
+    installModal.classList.remove('open');
+  }
+  document.getElementById('installClose').addEventListener('click', closeInstallModal);
+  installOverlay.addEventListener('click', closeInstallModal);
+
+  installBtn.addEventListener('click', function(){
+    if(deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(function(){
+        deferredInstallPrompt = null;
+      });
+      return;
+    }
+    if(isIOS){
+      openInstallModal('画面下部（または上部）の共有ボタン［□に↑］をタップし、「ホーム画面に追加」を選んでください。');
+    }else{
+      openInstallModal('ブラウザのメニュー（⋮ または …）を開き、「アプリをインストール」または「ホーム画面に追加」を選んでください。');
+    }
   });
 
   if('serviceWorker' in navigator){
