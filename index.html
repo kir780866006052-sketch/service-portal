@@ -119,10 +119,103 @@
 
   /* ---------- Main grid ---------- */
   main{
-    max-width:1100px;
     margin:0 auto;
     padding:28px 20px 60px;
   }
+
+  /* ---------- Page layout (links | cards | announcements) ----------
+     1500px以上 ：左端 リンク一覧｜中央 カード｜右端 お知らせ
+     1100〜1499px：左 リンク一覧｜右 カード、お知らせはカードの下
+     700〜1099px ：カードが上、その下にリンク一覧とお知らせを左右に並べる
+     700px未満   ：縦1列（カード → リンク一覧 → お知らせ） */
+  .layout{display:flex;flex-direction:column;gap:22px;}
+  .content{min-width:0;}
+  .link-col{order:2;}
+  .notice-col{order:3;}
+
+  @media (min-width:700px){
+    .layout{
+      display:grid;
+      gap:24px;
+      align-items:start;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      grid-template-areas:"cards cards" "links notice";
+    }
+    .content{grid-area:cards;}
+    .link-col{grid-area:links;}
+    .notice-col{grid-area:notice;}
+  }
+  @media (min-width:1100px){
+    .layout{
+      grid-template-columns:260px minmax(0,1fr);
+      grid-template-areas:"links cards" "links notice";
+    }
+    .link-col{
+      position:sticky;
+      top:84px;
+      max-height:calc(100vh - 104px);
+      overflow-y:auto;
+    }
+  }
+  @media (min-width:1500px){
+    .layout{
+      grid-template-columns:260px minmax(0,1fr) 300px;
+      grid-template-areas:"links cards notice";
+    }
+    .content{max-width:1040px;width:100%;margin:0 auto;}
+    .notice-col{
+      position:sticky;
+      top:84px;
+      max-height:calc(100vh - 104px);
+      overflow-y:auto;
+    }
+  }
+
+  .link-panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-card);
+    padding:14px 16px 10px;
+  }
+  .link-title{
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 8px;
+  }
+  .link-title::before{
+    content:"🔗";
+    margin-right:6px;
+    font-size:13px;
+  }
+  .link-empty{
+    color:var(--ink-soft);
+    font-size:13px;
+    line-height:1.7;
+    margin:0;
+    padding:6px 2px 8px;
+  }
+  .link-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 6px;
+    font-size:13px;
+    line-height:1.5;
+    color:var(--ink);
+    text-decoration:none;
+    border-radius:6px;
+    word-break:break-word;
+  }
+  .link-item:hover{background:var(--surface-alt);}
+  .link-item:focus-visible{outline:3px solid var(--blue-soft);outline-offset:1px;}
+  .link-item i{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    flex-shrink:0;
+  }
+  .link-item span{min-width:0;}
   .section-heading{
     font-size:14px;
     color:var(--ink-soft);
@@ -192,7 +285,6 @@
     border:1px solid var(--line);
     border-radius:var(--radius-card);
     padding:14px 16px 6px;
-    margin-bottom:22px;
   }
   .announce-head{
     display:flex;
@@ -260,7 +352,7 @@
 
   .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(max(280px,calc((100% - 28px) / 3)),1fr));
     gap:14px;
   }
 
@@ -776,18 +868,33 @@
 </header>
 
 <main>
-  <section class="announce-panel" id="announcePanel">
-    <div class="announce-head">
-      <span class="announce-title">お知らせ</span>
+  <div class="layout">
+    <div class="content">
+      <p class="section-heading">よく使うページ</p>
+      <div id="gridArea">
+        <div class="loading-state">読み込み中です…</div>
+      </div>
     </div>
-    <div id="announceList">
-      <p class="loading-state" style="padding:8px 2px;">読み込み中です…</p>
-    </div>
-  </section>
 
-  <p class="section-heading">よく使うページ</p>
-  <div id="gridArea">
-    <div class="loading-state">読み込み中です…</div>
+    <nav class="link-col" aria-label="リンク一覧">
+      <section class="link-panel">
+        <p class="link-title">リンク一覧</p>
+        <div id="linkListView">
+          <p class="loading-state" style="padding:8px 2px;">読み込み中です…</p>
+        </div>
+      </section>
+    </nav>
+
+    <aside class="notice-col">
+      <section class="announce-panel" id="announcePanel">
+        <div class="announce-head">
+          <span class="announce-title">お知らせ</span>
+        </div>
+        <div id="announceList">
+          <p class="loading-state" style="padding:8px 2px;">読み込み中です…</p>
+        </div>
+      </section>
+    </aside>
   </div>
 </main>
 
@@ -830,6 +937,24 @@
     <p class="divider-label">登録済みのページ</p>
     <div id="siteList"></div>
     <p class="drawer-note">ここで登録した内容は、このポータルを開くすべての人と共有されます。</p>
+
+    <div class="add-form" style="margin-top:24px;">
+      <p class="divider-label">リンク一覧に追加</p>
+      <div class="field-group">
+        <label class="field-label" for="newLinkName">Webページ名</label>
+        <input class="field-input" id="newLinkName" type="text" placeholder="例：整備予約システム">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="newLinkUrl">URL</label>
+        <input class="field-input" id="newLinkUrl" type="text" placeholder="https://">
+      </div>
+      <button class="btn btn-primary btn-block" id="addLinkBtn">追加する</button>
+      <p class="drawer-note" id="addLinkError" style="color:var(--danger);display:none;"></p>
+    </div>
+
+    <p class="divider-label">登録済みのリンク</p>
+    <div id="linkManageList"></div>
+    <p class="drawer-note">ここで登録した内容は、画面のリンク一覧に表示されます（お知らせには記録されません）。</p>
 
     <div class="add-form" style="margin-top:24px;">
       <p class="divider-label">お知らせを投稿</p>
@@ -875,6 +1000,33 @@
   <p class="drawer-note" id="installModalBody" style="margin:0 0 4px;"></p>
   <div class="edit-actions">
     <button class="btn btn-outline btn-block" id="installClose">閉じる</button>
+  </div>
+</div>
+
+<div class="overlay pw" id="appInstallOverlay"></div>
+<div class="password-modal" id="appInstallModal" role="dialog" aria-label="アプリのインストール" style="width:min(400px,90vw);">
+  <div id="appInstallAsk">
+    <p class="pw-title" id="appInstallQuestion">アプリとしてデスクトップにショートカットを作成しますか？</p>
+    <p class="drawer-note" id="appInstallHint" style="margin:0 0 16px;"></p>
+    <div class="edit-actions">
+      <button class="btn btn-primary" id="appInstallYes" style="flex:1;">はい</button>
+      <button class="btn btn-outline" id="appInstallNo" style="flex:1;">いいえ</button>
+    </div>
+  </div>
+  <div id="appInstallGuide" style="display:none;">
+    <p class="pw-title">ホーム画面に追加する方法</p>
+    <p class="drawer-note" id="appInstallGuideBody" style="margin:0 0 16px;"></p>
+    <div class="edit-actions">
+      <button class="btn btn-outline btn-block" id="appInstallGuideClose">閉じる</button>
+    </div>
+  </div>
+  <div id="appInstallDone" style="display:none;text-align:center;">
+    <img src="/icons/icon-192.png" width="72" height="72" alt="" style="border-radius:16px;display:block;margin:0 auto 12px;">
+    <p class="pw-title" style="margin-bottom:6px;">インストールが完了しました</p>
+    <p class="drawer-note" style="margin:0 0 16px;">アプリのアイコンから、ポータルを開けるようになりました。</p>
+    <div class="edit-actions">
+      <button class="btn btn-primary btn-block" id="appInstallDoneClose">閉じる</button>
+    </div>
   </div>
 </div>
 
@@ -1415,6 +1567,222 @@
     newEmojiGrid.classList.remove('open');
   });
 
+  // ---------- リンク一覧（左側の欄）----------
+  var links = [];
+  var LINKS_API_URL = '/api/links';
+  var linkListView = document.getElementById('linkListView');
+  var linkManageList = document.getElementById('linkManageList');
+  var addLinkError = document.getElementById('addLinkError');
+  var ICON_DRAG = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>';
+  var ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>';
+  var ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/><path d="M19 6l-1 14a1 1 0 01-1 1H7a1 1 0 01-1-1L5 6"/></svg>';
+
+  function uidLink(){
+    return 'link_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  }
+
+  async function loadLinks(){
+    try{
+      var res = await fetch(LINKS_API_URL);
+      if(!res.ok) throw new Error('read failed');
+      links = await res.json();
+      if(!Array.isArray(links)) links = [];
+    }catch(e){
+      links = [];
+      console.error('リンク一覧の読み込みに失敗しました', e);
+    }
+    renderLinkPanel();
+    renderLinkManageList();
+  }
+
+  async function saveLinks(){
+    try{
+      var res = await fetch(LINKS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(links)
+      });
+      if(!res.ok) throw new Error('save failed');
+    }catch(e){
+      console.error('リンク一覧の保存に失敗しました', e);
+      alert('保存に失敗しました。ネットワーク状況を確認して、もう一度お試しください。');
+    }
+  }
+
+  function renderLinkPanel(){
+    if(!links.length){
+      linkListView.innerHTML = '<p class="link-empty">リンクはまだ登録されていません。<br>右上の設定ボタンから追加できます。</p>';
+      return;
+    }
+    var html = '';
+    links.forEach(function(l, i){
+      var color = palette[i % palette.length];
+      html +=
+        '<a class="link-item" href="' + escapeAttr(l.url) + '" target="_blank" rel="noopener" title="' + escapeAttr(l.url) + '">' +
+          '<i style="background:' + color + '"></i>' +
+          '<span>' + escapeHtml(l.name) + '</span>' +
+        '</a>';
+    });
+    linkListView.innerHTML = html;
+  }
+
+  function renderLinkManageList(){
+    if(!links.length){
+      linkManageList.innerHTML = '<p class="drawer-note">登録済みのリンクはありません。</p>';
+      return;
+    }
+    var html = '';
+    links.forEach(function(l){
+      html +=
+        '<div class="site-row link-row" data-id="' + l.id + '">' +
+          '<div class="site-row-main">' +
+            '<button type="button" class="drag-handle link-drag-handle" aria-label="並び替え" data-id="' + l.id + '">' + ICON_DRAG + '</button>' +
+            '<div class="site-row-info">' +
+              '<div class="site-row-name">' + escapeHtml(l.name) + '</div>' +
+              '<div class="site-row-url">' + escapeHtml(l.url) + '</div>' +
+            '</div>' +
+            '<div class="row-actions">' +
+              '<button class="icon-btn link-edit-toggle" aria-label="編集" data-id="' + l.id + '">' + ICON_EDIT + '</button>' +
+              '<button class="icon-btn danger link-delete-btn" aria-label="削除" data-id="' + l.id + '">' + ICON_TRASH + '</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="edit-form" id="link-edit-' + l.id + '">' +
+            '<div class="field-group">' +
+              '<label class="field-label">Webページ名</label>' +
+              '<input class="field-input link-edit-name" type="text" value="' + escapeAttr(l.name) + '">' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">URL</label>' +
+              '<input class="field-input link-edit-url" type="text" value="' + escapeAttr(l.url) + '">' +
+            '</div>' +
+            '<div class="edit-actions">' +
+              '<button class="btn btn-primary link-save-edit" data-id="' + l.id + '">保存する</button>' +
+              '<button class="btn btn-outline link-cancel-edit" data-id="' + l.id + '">キャンセル</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    });
+    linkManageList.innerHTML = html;
+
+    Array.prototype.forEach.call(linkManageList.querySelectorAll('.link-edit-toggle'), function(btn){
+      btn.addEventListener('click', function(){
+        document.getElementById('link-edit-' + btn.getAttribute('data-id')).classList.toggle('open');
+      });
+    });
+    Array.prototype.forEach.call(linkManageList.querySelectorAll('.link-cancel-edit'), function(btn){
+      btn.addEventListener('click', function(){
+        document.getElementById('link-edit-' + btn.getAttribute('data-id')).classList.remove('open');
+      });
+    });
+    Array.prototype.forEach.call(linkManageList.querySelectorAll('.link-save-edit'), function(btn){
+      btn.addEventListener('click', async function(){
+        var id = btn.getAttribute('data-id');
+        var row = linkManageList.querySelector('.link-row[data-id="' + id + '"]');
+        var name = row.querySelector('.link-edit-name').value.trim();
+        var url = normalizeUrl(row.querySelector('.link-edit-url').value);
+        if(!name || !url) return;
+        try{ new URL(url); }catch(e){
+          alert('URLの形式が正しくありません。');
+          return;
+        }
+        var target = links.find(function(x){ return x.id === id; });
+        if(target){
+          target.name = name;
+          target.url = url;
+          await saveLinks();
+          renderLinkPanel();
+          renderLinkManageList();
+        }
+      });
+    });
+    Array.prototype.forEach.call(linkManageList.querySelectorAll('.link-delete-btn'), function(btn){
+      btn.addEventListener('click', async function(){
+        var id = btn.getAttribute('data-id');
+        links = links.filter(function(x){ return x.id !== id; });
+        await saveLinks();
+        renderLinkPanel();
+        renderLinkManageList();
+      });
+    });
+
+    wireLinkDragReorder();
+  }
+
+  function wireLinkDragReorder(){
+    var handles = linkManageList.querySelectorAll('.link-drag-handle');
+    Array.prototype.forEach.call(handles, function(handle){
+      handle.addEventListener('pointerdown', function(ev){
+        ev.preventDefault();
+        var row = handle.closest('.link-row');
+        if(!row) return;
+        try{ handle.setPointerCapture(ev.pointerId); }catch(e){}
+        row.classList.add('dragging');
+
+        function onMove(mv){
+          var target = document.elementFromPoint(mv.clientX, mv.clientY);
+          if(!target) return;
+          var hoveredRow = target.closest ? target.closest('.link-row') : null;
+          if(!hoveredRow || hoveredRow === row) return;
+          var rowsNow = Array.prototype.slice.call(linkManageList.querySelectorAll('.link-row'));
+          var fromIdx = rowsNow.indexOf(row);
+          var toIdx = rowsNow.indexOf(hoveredRow);
+          if(fromIdx === -1 || toIdx === -1) return;
+          if(fromIdx < toIdx){
+            linkManageList.insertBefore(row, hoveredRow.nextSibling);
+          }else{
+            linkManageList.insertBefore(row, hoveredRow);
+          }
+        }
+
+        function onUp(){
+          row.classList.remove('dragging');
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+          document.removeEventListener('pointercancel', onUp);
+          var newOrderIds = Array.prototype.map.call(linkManageList.querySelectorAll('.link-row'), function(r){ return r.getAttribute('data-id'); });
+          var reordered = newOrderIds.map(function(oid){
+            return links.find(function(x){ return x.id === oid; });
+          }).filter(Boolean);
+          if(reordered.length === links.length){
+            links = reordered;
+          }
+          saveLinks();
+          renderLinkPanel();
+        }
+
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+        document.addEventListener('pointercancel', onUp);
+      });
+    });
+  }
+
+  document.getElementById('addLinkBtn').addEventListener('click', async function(){
+    var nameInput = document.getElementById('newLinkName');
+    var urlInput = document.getElementById('newLinkUrl');
+    var name = nameInput.value.trim();
+    var url = normalizeUrl(urlInput.value);
+    addLinkError.style.display = 'none';
+
+    if(!name || !url){
+      addLinkError.textContent = 'Webページ名とURLの両方を入力してください。';
+      addLinkError.style.display = 'block';
+      return;
+    }
+    try{ new URL(url); }catch(e){
+      addLinkError.textContent = 'URLの形式が正しくありません。';
+      addLinkError.style.display = 'block';
+      return;
+    }
+
+    links.push({ id: uidLink(), name: name, url: url });
+    await saveLinks();
+    renderLinkPanel();
+    renderLinkManageList();
+    nameInput.value = '';
+    urlInput.value = '';
+  });
+
   searchInput.addEventListener('input', renderGrid);
 
   function openDrawer(){
@@ -1492,6 +1860,7 @@
       closePasswordGate();
       closeQrModal();
       closeInstallModal();
+      closeAppInstall();
     }
   });
 
@@ -1532,6 +1901,8 @@
 
   var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
   var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var appInstallScheduled = false;
+  var appInstallDoneShown = false;
 
   if(!isStandalone){
     installBtn.style.display = '';
@@ -1541,6 +1912,7 @@
     e.preventDefault();
     deferredInstallPrompt = e;
     if(!isStandalone) installBtn.style.display = '';
+    scheduleAppInstallDialog();
   });
 
   function openInstallModal(bodyText){
@@ -1570,6 +1942,87 @@
     }
   });
 
+  // ---------- アプリのインストール案内ダイアログ ----------
+  var appInstallOverlay = document.getElementById('appInstallOverlay');
+  var appInstallModal = document.getElementById('appInstallModal');
+  var appInstallViews = {
+    ask: document.getElementById('appInstallAsk'),
+    guide: document.getElementById('appInstallGuide'),
+    done: document.getElementById('appInstallDone')
+  };
+  var appInstallQuestion = document.getElementById('appInstallQuestion');
+  var appInstallHint = document.getElementById('appInstallHint');
+  var appInstallGuideBody = document.getElementById('appInstallGuideBody');
+
+  function showAppInstallView(name){
+    Object.keys(appInstallViews).forEach(function(k){
+      appInstallViews[k].style.display = (k === name) ? '' : 'none';
+    });
+    appInstallOverlay.classList.add('open');
+    appInstallModal.classList.add('open');
+  }
+  function closeAppInstall(){
+    appInstallOverlay.classList.remove('open');
+    appInstallModal.classList.remove('open');
+  }
+  function showAppInstallDone(){
+    appInstallDoneShown = true;
+    installBtn.style.display = 'none';
+    showAppInstallView('done');
+  }
+
+  // 未インストールのときだけ「はい／いいえ」を表示する（「いいえ」でも次に開いたときはまた表示）
+  function openAppInstallAsk(){
+    if(isStandalone) return;
+    if(deferredInstallPrompt){
+      appInstallQuestion.textContent = 'アプリとしてデスクトップにショートカットを作成しますか？';
+      appInstallHint.textContent = '「はい」を選ぶと、ブラウザのインストール確認が表示されます。';
+      showAppInstallView('ask');
+    }else if(isIOS){
+      appInstallQuestion.textContent = 'ホーム画面にアプリとして追加しますか？';
+      appInstallHint.textContent = '「はい」を選ぶと、追加の手順が表示されます。';
+      showAppInstallView('ask');
+    }
+  }
+
+  function scheduleAppInstallDialog(){
+    if(isStandalone || appInstallScheduled) return;
+    appInstallScheduled = true;
+    function go(){ setTimeout(openAppInstallAsk, 800); }
+    if(document.readyState === 'complete'){ go(); }
+    else{ window.addEventListener('load', go); }
+  }
+
+  document.getElementById('appInstallYes').addEventListener('click', function(){
+    if(deferredInstallPrompt){
+      var promptEvent = deferredInstallPrompt;
+      deferredInstallPrompt = null;
+      closeAppInstall();
+      promptEvent.prompt();
+      promptEvent.userChoice.then(function(choice){
+        if(choice && choice.outcome === 'accepted'){
+          // 通常は appinstalled で完了表示が出る。出なかった場合の保険。
+          setTimeout(function(){ if(!appInstallDoneShown) showAppInstallDone(); }, 2500);
+        }
+      });
+      return;
+    }
+    appInstallGuideBody.textContent = isIOS
+      ? '画面下部（または上部）の共有ボタン［□に↑］をタップし、「ホーム画面に追加」を選んでください。'
+      : 'ブラウザのメニュー（⋮ または …）を開き、「アプリをインストール」または「ホーム画面に追加」を選んでください。';
+    showAppInstallView('guide');
+  });
+  document.getElementById('appInstallNo').addEventListener('click', closeAppInstall);
+  document.getElementById('appInstallGuideClose').addEventListener('click', closeAppInstall);
+  document.getElementById('appInstallDoneClose').addEventListener('click', closeAppInstall);
+  appInstallOverlay.addEventListener('click', closeAppInstall);
+
+  window.addEventListener('appinstalled', function(){
+    if(!appInstallDoneShown) showAppInstallDone();
+  });
+
+  if(isIOS) scheduleAppInstallDialog();
+
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){
       navigator.serviceWorker.register('/sw.js').catch(function(e){
@@ -1580,6 +2033,7 @@
 
   loadSites();
   loadAnnouncements();
+  loadLinks();
 })();
 </script>
 

@@ -1,7 +1,5 @@
-const CACHE_NAME = 'service-portal-v1';
+const CACHE_NAME = 'service-portal-v3';
 const CORE_ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/qrcode.js',
   '/icons/icon-192.png',
@@ -49,7 +47,28 @@ self.addEventListener('fetch', function(event){
     return;
   }
 
-  // App shell / static assets: cache-first, update in background
+  // Page navigations and the HTML file itself: network-first,
+  // so new deploys show up immediately. Cache is only a fallback
+  // for when the device is offline.
+  var isHtml = req.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html');
+  if(isHtml){
+    event.respondWith(
+      fetch(req).then(function(res){
+        if(res && res.status === 200){
+          var copy = res.clone();
+          caches.open(CACHE_NAME).then(function(cache){ cache.put(req, copy); });
+        }
+        return res;
+      }).catch(function(){
+        return caches.match(req).then(function(cached){
+          return cached || caches.match('/index.html');
+        });
+      })
+    );
+    return;
+  }
+
+  // Other static assets (icons, manifest, qrcode.js): cache-first, update in background
   event.respondWith(
     caches.match(req).then(function(cached){
       var fetchPromise = fetch(req).then(function(res){
