@@ -209,12 +209,51 @@
   }
   .link-item:hover{background:var(--surface-alt);}
   .link-item:focus-visible{outline:3px solid var(--blue-soft);outline-offset:1px;}
-  .link-item i{
-    width:7px;
-    height:7px;
-    border-radius:50%;
+  .link-mark{
+    color:var(--blue-soft);
+    font-size:15px;
+    line-height:1;
+    width:8px;
+    text-align:center;
     flex-shrink:0;
   }
+  .link-group-title{
+    font-size:11px;
+    font-weight:500;
+    color:var(--ink-soft);
+    margin:12px 0 2px;
+  }
+  .link-group-title:first-child{margin-top:0;}
+  .link-manage-group{
+    font-size:12px;
+    font-weight:500;
+    color:var(--ink-soft);
+    margin:14px 0 4px;
+  }
+  .link-empty{padding:4px 4px 6px;}
+  textarea.field-input{display:block;font-family:inherit;line-height:1.5;resize:vertical;}
+  textarea.name-3lines{resize:none;}
+
+  /* 重要なお知らせ */
+  .notice-col{display:flex;flex-direction:column;gap:14px;}
+  .pinned-panel{
+    background:var(--surface);
+    border:1px solid var(--amber);
+    border-left-width:5px;
+    border-radius:var(--radius-card);
+    padding:12px 14px;
+  }
+  .pinned-title{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 6px;}
+  .pinned-title::before{content:"📌";margin-right:6px;}
+  .pinned-item{
+    font-size:13px;
+    line-height:1.65;
+    white-space:pre-wrap;
+    word-break:break-word;
+    padding:7px 0;
+    border-top:1px solid var(--line);
+  }
+  .pinned-item:first-of-type{border-top:none;padding-top:0;}
   .link-item span{min-width:0;}
   .section-heading{
     font-size:14px;
@@ -365,7 +404,7 @@
     text-decoration:none;
     color:var(--ink);
     overflow:hidden;
-    min-height:96px;
+    height:144px;
     transition:border-color .15s ease, background .15s ease;
     position:relative;
     cursor:pointer;
@@ -451,11 +490,11 @@
 
   .card-body{
     position:relative;
-    padding:14px 34px 14px 16px;
+    padding:12px 34px 12px 16px;
     display:flex;
     flex-direction:column;
-    justify-content:center;
-    gap:4px;
+    justify-content:flex-start;
+    gap:3px;
     min-width:0;
     flex:1;
   }
@@ -470,7 +509,7 @@
     font-weight:700;
     font-size:14px;
     flex-shrink:0;
-    margin-bottom:4px;
+    margin-bottom:2px;
   }
   .card-mark.has-emoji{
     font-size:17px;
@@ -480,7 +519,14 @@
   .card-name{
     font-size:15px;
     font-weight:600;
-    line-height:1.4;
+    line-height:20px;
+    height:60px;
+    overflow:hidden;
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:3;
+    line-clamp:3;
+    white-space:pre-line;
     word-break:break-word;
   }
   .card-url{
@@ -886,6 +932,10 @@
     </nav>
 
     <aside class="notice-col">
+      <section class="pinned-panel" id="pinnedPanel" style="display:none;">
+        <p class="pinned-title">重要なお知らせ</p>
+        <div id="pinnedListView"></div>
+      </section>
       <section class="announce-panel" id="announcePanel">
         <div class="announce-head">
           <span class="announce-title">お知らせ</span>
@@ -919,8 +969,8 @@
         <div class="emoji-grid" id="newEmojiGrid"></div>
       </div>
       <div class="field-group">
-        <label class="field-label" for="newName">ウェブサイト名</label>
-        <input class="field-input" id="newName" type="text" placeholder="例：石川店 整備予約システム">
+        <label class="field-label" for="newName">ウェブサイト名（3行まで・Enterで改行）</label>
+        <textarea class="field-input name-3lines" id="newName" rows="3" placeholder="例：&#10;石川店&#10;整備予約システム"></textarea>
       </div>
       <div class="field-group">
         <label class="field-label" for="newUrl">URL</label>
@@ -941,6 +991,13 @@
     <div class="add-form" style="margin-top:24px;">
       <p class="divider-label">リンク一覧に追加</p>
       <div class="field-group">
+        <label class="field-label" for="newLinkGroup">グループ</label>
+        <select class="field-input" id="newLinkGroup">
+          <option value="web">WEBページ</option>
+          <option value="doc">資料（SharePointのExcel・PDFなど）</option>
+        </select>
+      </div>
+      <div class="field-group">
         <label class="field-label" for="newLinkName">Webページ名</label>
         <input class="field-input" id="newLinkName" type="text" placeholder="例：整備予約システム">
       </div>
@@ -954,7 +1011,21 @@
 
     <p class="divider-label">登録済みのリンク</p>
     <div id="linkManageList"></div>
-    <p class="drawer-note">ここで登録した内容は、画面のリンク一覧に表示されます（お知らせには記録されません）。</p>
+    <p class="drawer-note">ここで登録した内容は、画面のリンク一覧に表示されます（お知らせには記録されません）。資料のURLは、SharePointの「リンクのコピー」で取得した、組織内のユーザー向けのリンクを登録してください。</p>
+
+    <div class="add-form" style="margin-top:24px;">
+      <p class="divider-label">重要なお知らせを追加</p>
+      <div class="field-group">
+        <label class="field-label" for="newPinnedText">内容（改行できます）</label>
+        <textarea class="field-input" id="newPinnedText" rows="4" maxlength="300" placeholder="例：月末の締め作業は25日までにお願いします"></textarea>
+      </div>
+      <button class="btn btn-primary btn-block" id="addPinnedBtn">追加する</button>
+      <p class="drawer-note" id="addPinnedError" style="color:var(--danger);display:none;"></p>
+    </div>
+
+    <p class="divider-label">登録済みの重要なお知らせ</p>
+    <div id="pinnedManageList"></div>
+    <p class="drawer-note">ここで登録した内容は、お知らせ欄の一番上に「重要なお知らせ」として表示されます（お知らせの履歴には記録されません）。</p>
 
     <div class="add-form" style="margin-top:24px;">
       <p class="divider-label">お知らせを投稿</p>
@@ -1300,7 +1371,7 @@
     var query = (searchInput.value || '').trim().toLowerCase();
     var visible = sites.filter(function(site){
       if(!query) return true;
-      return site.name.toLowerCase().indexOf(query) !== -1;
+      return flatName(site.name).toLowerCase().indexOf(query) !== -1;
     });
     visible = visible.slice().sort(function(a,b){
       return (a.pinned ? 0 : 1) - (b.pinned ? 0 : 1);
@@ -1331,7 +1402,7 @@
               (isNew ? '<span class="new-badge">NEW</span>' : '') +
             '</span>' +
             '<span class="' + markClass + '" style="background:' + color + '">' + markContent + '</span>' +
-            '<span class="card-name">' + escapeHtml(site.name) + '</span>' +
+            '<span class="card-name" title="' + escapeAttr(flatName(site.name)) + '">' + escapeHtml(site.name) + '</span>' +
             '<span class="card-url">' + escapeHtml(subtitle) + '</span>' +
           '</span>' +
           '<span class="qr-thumb" data-id="' + site.id + '" aria-label="QRコードを拡大表示">' + buildQrSvg(site.url, 2) + '</span>' +
@@ -1357,7 +1428,7 @@
             '</button>' +
             '<span class="row-emoji">' + rowEmoji + '</span>' +
             '<div class="site-row-info">' +
-              '<div class="site-row-name">' + escapeHtml(site.name) + '</div>' +
+              '<div class="site-row-name">' + escapeHtml(flatName(site.name)) + '</div>' +
               '<div class="site-row-url">' + escapeHtml(site.url) + '</div>' +
             '</div>' +
             '<div class="row-actions">' +
@@ -1382,8 +1453,8 @@
               '<div class="emoji-grid edit-emoji-grid" id="edit-emoji-grid-' + site.id + '"></div>' +
             '</div>' +
             '<div class="field-group">' +
-              '<label class="field-label">ウェブサイト名</label>' +
-              '<input class="field-input edit-name" type="text" value="' + escapeAttr(site.name) + '">' +
+              '<label class="field-label">ウェブサイト名（3行まで・Enterで改行）</label>' +
+              '<textarea class="field-input name-3lines edit-name" rows="3">' + escapeHtml(site.name) + '</textarea>' +
             '</div>' +
             '<div class="field-group">' +
               '<label class="field-label">URL</label>' +
@@ -1444,7 +1515,7 @@
       btn.addEventListener('click', async function(){
         var id = btn.getAttribute('data-id');
         var row = siteList.querySelector('.site-row[data-id="' + id + '"]');
-        var name = row.querySelector('.edit-name').value.trim();
+        var name = normalizeSiteName(row.querySelector('.edit-name').value);
         var url = normalizeUrl(row.querySelector('.edit-url').value);
         var note = row.querySelector('.edit-note').value.trim();
         var emojiEl = row.querySelector('.edit-emoji-current');
@@ -1459,7 +1530,7 @@
           await saveSites();
           renderGrid();
           renderList();
-          logAnnouncement('auto', '「' + name + '」を更新しました');
+          logAnnouncement('auto', '「' + flatName(name) + '」を更新しました');
         }
       });
     });
@@ -1471,7 +1542,7 @@
         await saveSites();
         renderGrid();
         renderList();
-        if(target) logAnnouncement('auto', '「' + target.name + '」を削除しました');
+        if(target) logAnnouncement('auto', '「' + flatName(target.name) + '」を削除しました');
       });
     });
 
@@ -1538,7 +1609,7 @@
     var nameInput = document.getElementById('newName');
     var urlInput = document.getElementById('newUrl');
     var noteInput = document.getElementById('newNote');
-    var name = nameInput.value.trim();
+    var name = normalizeSiteName(nameInput.value);
     var url = normalizeUrl(urlInput.value);
     var note = noteInput.value.trim();
     addError.style.display = 'none';
@@ -1558,13 +1629,31 @@
     await saveSites();
     renderGrid();
     renderList();
-    logAnnouncement('auto', '「' + name + '」を追加しました');
+    logAnnouncement('auto', '「' + flatName(name) + '」を追加しました');
     nameInput.value = '';
     urlInput.value = '';
     noteInput.value = '';
     newEmoji = '';
     newEmojiCurrent.textContent = '＋';
     newEmojiGrid.classList.remove('open');
+  });
+
+  // ---------- サイト名（3行まで）----------
+  // 入力は最大3行。表示・検索・お知らせの文言では、改行をつなげた1行の名前を使う。
+  function normalizeSiteName(v){
+    var lines = String(v || '').replace(/\r/g, '').split('\n').slice(0, 3).map(function(s){ return s.trim(); });
+    while(lines.length && !lines[lines.length - 1]) lines.pop();
+    return lines.join('\n').trim();
+  }
+  function flatName(name){
+    return String(name || '').replace(/\s*\n\s*/g, '');
+  }
+  document.addEventListener('input', function(e){
+    var t = e.target;
+    if(t && t.classList && t.classList.contains('name-3lines')){
+      var parts = t.value.replace(/\r/g, '').split('\n');
+      if(parts.length > 3) t.value = parts.slice(0, 3).join('\n');
+    }
   });
 
   // ---------- リンク一覧（左側の欄）----------
@@ -1576,6 +1665,15 @@
   var ICON_DRAG = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>';
   var ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>';
   var ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/><path d="M19 6l-1 14a1 1 0 01-1 1H7a1 1 0 01-1-1L5 6"/></svg>';
+  var LINK_GROUPS = [
+    { key: 'web', label: 'WEBページ' },
+    { key: 'doc', label: '資料' }
+  ];
+
+  // groupが無い（以前に登録した）リンクは「WEBページ」として扱う
+  function linkGroupOf(l){
+    return (l && l.group === 'doc') ? 'doc' : 'web';
+  }
 
   function uidLink(){
     return 'link_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
@@ -1610,57 +1708,78 @@
   }
 
   function renderLinkPanel(){
-    if(!links.length){
-      linkListView.innerHTML = '<p class="link-empty">リンクはまだ登録されていません。<br>右上の設定ボタンから追加できます。</p>';
-      return;
-    }
     var html = '';
-    links.forEach(function(l, i){
-      var color = palette[i % palette.length];
-      html +=
-        '<a class="link-item" href="' + escapeAttr(l.url) + '" target="_blank" rel="noopener" title="' + escapeAttr(l.url) + '">' +
-          '<i style="background:' + color + '"></i>' +
-          '<span>' + escapeHtml(l.name) + '</span>' +
-        '</a>';
+    var any = false;
+    LINK_GROUPS.forEach(function(g){
+      var items = links.filter(function(l){ return linkGroupOf(l) === g.key; });
+      if(items.length) any = true;
+      html += '<p class="link-group-title">' + g.label + '</p>';
+      if(!items.length){
+        html += '<p class="link-empty">' + (g.key === 'doc' ? '資料はまだ登録されていません。' : 'WEBページはまだ登録されていません。') + '</p>';
+        return;
+      }
+      items.forEach(function(l){
+        html +=
+          '<a class="link-item" href="' + escapeAttr(l.url) + '" target="_blank" rel="noopener" title="' + escapeAttr(l.url) + '">' +
+            '<span class="link-mark">›</span>' +
+            '<span>' + escapeHtml(l.name) + '</span>' +
+          '</a>';
+      });
     });
+    if(!any) html += '<p class="link-empty">右上の設定ボタンから追加できます。</p>';
     linkListView.innerHTML = html;
   }
 
+  function linkGroupOptions(selected){
+    return LINK_GROUPS.map(function(g){
+      return '<option value="' + g.key + '"' + (g.key === selected ? ' selected' : '') + '>' + g.label + '</option>';
+    }).join('');
+  }
+
+  function linkRowHtml(l){
+    return '' +
+      '<div class="site-row link-row" data-id="' + l.id + '">' +
+        '<div class="site-row-main">' +
+          '<button type="button" class="drag-handle link-drag-handle" aria-label="並び替え" data-id="' + l.id + '">' + ICON_DRAG + '</button>' +
+          '<div class="site-row-info">' +
+            '<div class="site-row-name">' + escapeHtml(l.name) + '</div>' +
+            '<div class="site-row-url">' + escapeHtml(l.url) + '</div>' +
+          '</div>' +
+          '<div class="row-actions">' +
+            '<button class="icon-btn link-edit-toggle" aria-label="編集" data-id="' + l.id + '">' + ICON_EDIT + '</button>' +
+            '<button class="icon-btn danger link-delete-btn" aria-label="削除" data-id="' + l.id + '">' + ICON_TRASH + '</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="edit-form" id="link-edit-' + l.id + '">' +
+          '<div class="field-group">' +
+            '<label class="field-label">グループ</label>' +
+            '<select class="field-input link-edit-group">' + linkGroupOptions(linkGroupOf(l)) + '</select>' +
+          '</div>' +
+          '<div class="field-group">' +
+            '<label class="field-label">Webページ名</label>' +
+            '<input class="field-input link-edit-name" type="text" value="' + escapeAttr(l.name) + '">' +
+          '</div>' +
+          '<div class="field-group">' +
+            '<label class="field-label">URL</label>' +
+            '<input class="field-input link-edit-url" type="text" value="' + escapeAttr(l.url) + '">' +
+          '</div>' +
+          '<div class="edit-actions">' +
+            '<button class="btn btn-primary link-save-edit" data-id="' + l.id + '">保存する</button>' +
+            '<button class="btn btn-outline link-cancel-edit" data-id="' + l.id + '">キャンセル</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
   function renderLinkManageList(){
-    if(!links.length){
-      linkManageList.innerHTML = '<p class="drawer-note">登録済みのリンクはありません。</p>';
-      return;
-    }
     var html = '';
-    links.forEach(function(l){
-      html +=
-        '<div class="site-row link-row" data-id="' + l.id + '">' +
-          '<div class="site-row-main">' +
-            '<button type="button" class="drag-handle link-drag-handle" aria-label="並び替え" data-id="' + l.id + '">' + ICON_DRAG + '</button>' +
-            '<div class="site-row-info">' +
-              '<div class="site-row-name">' + escapeHtml(l.name) + '</div>' +
-              '<div class="site-row-url">' + escapeHtml(l.url) + '</div>' +
-            '</div>' +
-            '<div class="row-actions">' +
-              '<button class="icon-btn link-edit-toggle" aria-label="編集" data-id="' + l.id + '">' + ICON_EDIT + '</button>' +
-              '<button class="icon-btn danger link-delete-btn" aria-label="削除" data-id="' + l.id + '">' + ICON_TRASH + '</button>' +
-            '</div>' +
-          '</div>' +
-          '<div class="edit-form" id="link-edit-' + l.id + '">' +
-            '<div class="field-group">' +
-              '<label class="field-label">Webページ名</label>' +
-              '<input class="field-input link-edit-name" type="text" value="' + escapeAttr(l.name) + '">' +
-            '</div>' +
-            '<div class="field-group">' +
-              '<label class="field-label">URL</label>' +
-              '<input class="field-input link-edit-url" type="text" value="' + escapeAttr(l.url) + '">' +
-            '</div>' +
-            '<div class="edit-actions">' +
-              '<button class="btn btn-primary link-save-edit" data-id="' + l.id + '">保存する</button>' +
-              '<button class="btn btn-outline link-cancel-edit" data-id="' + l.id + '">キャンセル</button>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
+    LINK_GROUPS.forEach(function(g){
+      var items = links.filter(function(l){ return linkGroupOf(l) === g.key; });
+      html += '<p class="link-manage-group">' + g.label + '</p>';
+      html += '<div class="link-sec" data-group="' + g.key + '">';
+      if(!items.length) html += '<p class="drawer-note link-sec-empty">登録済みのリンクはありません。</p>';
+      items.forEach(function(l){ html += linkRowHtml(l); });
+      html += '</div>';
     });
     linkManageList.innerHTML = html;
 
@@ -1680,6 +1799,7 @@
         var row = linkManageList.querySelector('.link-row[data-id="' + id + '"]');
         var name = row.querySelector('.link-edit-name').value.trim();
         var url = normalizeUrl(row.querySelector('.link-edit-url').value);
+        var group = row.querySelector('.link-edit-group').value === 'doc' ? 'doc' : 'web';
         if(!name || !url) return;
         try{ new URL(url); }catch(e){
           alert('URLの形式が正しくありません。');
@@ -1689,6 +1809,7 @@
         if(target){
           target.name = name;
           target.url = url;
+          target.group = group;
           await saveLinks();
           renderLinkPanel();
           renderLinkManageList();
@@ -1708,6 +1829,7 @@
     wireLinkDragReorder();
   }
 
+  // 並び替えは同じグループの中だけで行う（グループを変えるときは編集画面で選ぶ）
   function wireLinkDragReorder(){
     var handles = linkManageList.querySelectorAll('.link-drag-handle');
     Array.prototype.forEach.call(handles, function(handle){
@@ -1715,6 +1837,7 @@
         ev.preventDefault();
         var row = handle.closest('.link-row');
         if(!row) return;
+        var section = row.parentNode;
         try{ handle.setPointerCapture(ev.pointerId); }catch(e){}
         row.classList.add('dragging');
 
@@ -1722,15 +1845,15 @@
           var target = document.elementFromPoint(mv.clientX, mv.clientY);
           if(!target) return;
           var hoveredRow = target.closest ? target.closest('.link-row') : null;
-          if(!hoveredRow || hoveredRow === row) return;
-          var rowsNow = Array.prototype.slice.call(linkManageList.querySelectorAll('.link-row'));
+          if(!hoveredRow || hoveredRow === row || hoveredRow.parentNode !== section) return;
+          var rowsNow = Array.prototype.slice.call(section.querySelectorAll('.link-row'));
           var fromIdx = rowsNow.indexOf(row);
           var toIdx = rowsNow.indexOf(hoveredRow);
           if(fromIdx === -1 || toIdx === -1) return;
           if(fromIdx < toIdx){
-            linkManageList.insertBefore(row, hoveredRow.nextSibling);
+            section.insertBefore(row, hoveredRow.nextSibling);
           }else{
-            linkManageList.insertBefore(row, hoveredRow);
+            section.insertBefore(row, hoveredRow);
           }
         }
 
@@ -1739,8 +1862,11 @@
           document.removeEventListener('pointermove', onMove);
           document.removeEventListener('pointerup', onUp);
           document.removeEventListener('pointercancel', onUp);
-          var newOrderIds = Array.prototype.map.call(linkManageList.querySelectorAll('.link-row'), function(r){ return r.getAttribute('data-id'); });
-          var reordered = newOrderIds.map(function(oid){
+          var order = [];
+          Array.prototype.forEach.call(linkManageList.querySelectorAll('.link-row'), function(r){
+            order.push(r.getAttribute('data-id'));
+          });
+          var reordered = order.map(function(oid){
             return links.find(function(x){ return x.id === oid; });
           }).filter(Boolean);
           if(reordered.length === links.length){
@@ -1760,8 +1886,10 @@
   document.getElementById('addLinkBtn').addEventListener('click', async function(){
     var nameInput = document.getElementById('newLinkName');
     var urlInput = document.getElementById('newLinkUrl');
+    var groupSelect = document.getElementById('newLinkGroup');
     var name = nameInput.value.trim();
     var url = normalizeUrl(urlInput.value);
+    var group = groupSelect.value === 'doc' ? 'doc' : 'web';
     addLinkError.style.display = 'none';
 
     if(!name || !url){
@@ -1775,12 +1903,150 @@
       return;
     }
 
-    links.push({ id: uidLink(), name: name, url: url });
+    links.push({ id: uidLink(), name: name, url: url, group: group });
     await saveLinks();
     renderLinkPanel();
     renderLinkManageList();
     nameInput.value = '';
     urlInput.value = '';
+  });
+
+  // ---------- 重要なお知らせ（お知らせ欄の一番上の固定枠）----------
+  var pinnedItems = [];
+  var PINNED_API_URL = '/api/pinned';
+  var pinnedPanel = document.getElementById('pinnedPanel');
+  var pinnedListView = document.getElementById('pinnedListView');
+  var pinnedManageList = document.getElementById('pinnedManageList');
+  var addPinnedError = document.getElementById('addPinnedError');
+
+  function uidPinned(){
+    return 'pin_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  }
+
+  async function loadPinned(){
+    try{
+      var res = await fetch(PINNED_API_URL);
+      if(!res.ok) throw new Error('read failed');
+      pinnedItems = await res.json();
+      if(!Array.isArray(pinnedItems)) pinnedItems = [];
+    }catch(e){
+      pinnedItems = [];
+      console.error('重要なお知らせの読み込みに失敗しました', e);
+    }
+    renderPinnedPanel();
+    renderPinnedManageList();
+  }
+
+  async function savePinned(){
+    try{
+      var res = await fetch(PINNED_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pinnedItems)
+      });
+      if(!res.ok) throw new Error('save failed');
+    }catch(e){
+      console.error('重要なお知らせの保存に失敗しました', e);
+      alert('保存に失敗しました。ネットワーク状況を確認して、もう一度お試しください。');
+    }
+  }
+
+  function renderPinnedPanel(){
+    if(!pinnedItems.length){
+      pinnedPanel.style.display = 'none';
+      pinnedListView.innerHTML = '';
+      return;
+    }
+    var html = '';
+    pinnedItems.forEach(function(p){
+      html += '<div class="pinned-item">' + escapeHtml(p.text) + '</div>';
+    });
+    pinnedListView.innerHTML = html;
+    pinnedPanel.style.display = '';
+  }
+
+  function renderPinnedManageList(){
+    if(!pinnedItems.length){
+      pinnedManageList.innerHTML = '<p class="drawer-note">登録済みの重要なお知らせはありません。</p>';
+      return;
+    }
+    var html = '';
+    pinnedItems.forEach(function(p){
+      html +=
+        '<div class="site-row pinned-row" data-id="' + p.id + '">' +
+          '<div class="site-row-main">' +
+            '<div class="site-row-info">' +
+              '<div class="site-row-name">' + escapeHtml(String(p.text).replace(/\s*\n\s*/g, ' ')) + '</div>' +
+            '</div>' +
+            '<div class="row-actions">' +
+              '<button class="icon-btn pinned-edit-toggle" aria-label="編集" data-id="' + p.id + '">' + ICON_EDIT + '</button>' +
+              '<button class="icon-btn danger pinned-delete-btn" aria-label="削除" data-id="' + p.id + '">' + ICON_TRASH + '</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="edit-form" id="pinned-edit-' + p.id + '">' +
+            '<div class="field-group">' +
+              '<label class="field-label">内容（改行できます）</label>' +
+              '<textarea class="field-input pinned-edit-text" rows="4" maxlength="300">' + escapeHtml(p.text) + '</textarea>' +
+            '</div>' +
+            '<div class="edit-actions">' +
+              '<button class="btn btn-primary pinned-save-edit" data-id="' + p.id + '">保存する</button>' +
+              '<button class="btn btn-outline pinned-cancel-edit" data-id="' + p.id + '">キャンセル</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    });
+    pinnedManageList.innerHTML = html;
+
+    Array.prototype.forEach.call(pinnedManageList.querySelectorAll('.pinned-edit-toggle'), function(btn){
+      btn.addEventListener('click', function(){
+        document.getElementById('pinned-edit-' + btn.getAttribute('data-id')).classList.toggle('open');
+      });
+    });
+    Array.prototype.forEach.call(pinnedManageList.querySelectorAll('.pinned-cancel-edit'), function(btn){
+      btn.addEventListener('click', function(){
+        document.getElementById('pinned-edit-' + btn.getAttribute('data-id')).classList.remove('open');
+      });
+    });
+    Array.prototype.forEach.call(pinnedManageList.querySelectorAll('.pinned-save-edit'), function(btn){
+      btn.addEventListener('click', async function(){
+        var id = btn.getAttribute('data-id');
+        var row = pinnedManageList.querySelector('.pinned-row[data-id="' + id + '"]');
+        var text = row.querySelector('.pinned-edit-text').value.replace(/\r/g, '').trim();
+        if(!text) return;
+        var target = pinnedItems.find(function(x){ return x.id === id; });
+        if(target){
+          target.text = text;
+          await savePinned();
+          renderPinnedPanel();
+          renderPinnedManageList();
+        }
+      });
+    });
+    Array.prototype.forEach.call(pinnedManageList.querySelectorAll('.pinned-delete-btn'), function(btn){
+      btn.addEventListener('click', async function(){
+        var id = btn.getAttribute('data-id');
+        pinnedItems = pinnedItems.filter(function(x){ return x.id !== id; });
+        await savePinned();
+        renderPinnedPanel();
+        renderPinnedManageList();
+      });
+    });
+  }
+
+  document.getElementById('addPinnedBtn').addEventListener('click', async function(){
+    var textInput = document.getElementById('newPinnedText');
+    var text = textInput.value.replace(/\r/g, '').trim();
+    addPinnedError.style.display = 'none';
+    if(!text){
+      addPinnedError.textContent = '内容を入力してください。';
+      addPinnedError.style.display = 'block';
+      return;
+    }
+    pinnedItems.push({ id: uidPinned(), text: text, time: Date.now() });
+    await savePinned();
+    renderPinnedPanel();
+    renderPinnedManageList();
+    textInput.value = '';
   });
 
   searchInput.addEventListener('input', renderGrid);
@@ -1840,7 +2106,7 @@
   var qrModalUrl = document.getElementById('qrModalUrl');
 
   function openQrModal(site){
-    qrModalTitle.textContent = site.name;
+    qrModalTitle.textContent = flatName(site.name);
     qrModalUrl.textContent = site.url;
     var svg = buildQrSvg(site.url, 4);
     qrImgContainer.innerHTML = svg || '<p class="drawer-note">QRコードを生成できませんでした。</p>';
@@ -2034,6 +2300,7 @@
   loadSites();
   loadAnnouncements();
   loadLinks();
+  loadPinned();
 })();
 </script>
 
