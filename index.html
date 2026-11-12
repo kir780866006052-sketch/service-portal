@@ -113,6 +113,32 @@
     transition:background .15s ease, transform .15s ease;
     flex-shrink:0;
   }
+  .refresh-btn{
+    height:44px;
+    min-width:44px;
+    padding:0 16px 0 12px;
+    border-radius:var(--radius-ctrl);
+    border:1px solid rgba(255,255,255,0.25);
+    background:rgba(255,255,255,0.08);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    flex-shrink:0;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .refresh-btn:hover{background:rgba(255,255,255,0.18);}
+  .refresh-btn:active{transform:scale(0.94);}
+  .refresh-btn:focus-visible{outline:3px solid var(--blue-soft);outline-offset:2px;}
+  .refresh-btn svg{width:22px;height:22px;}
+  .refresh-btn.spinning svg{animation:refresh-spin .8s linear infinite;}
+  @keyframes refresh-spin{to{transform:rotate(360deg);}}
+
   .settings-btn:hover{background:rgba(255,255,255,0.18);}
   .settings-btn:active{transform:scale(0.94);}
   .settings-btn svg{width:22px;height:22px;}
@@ -876,6 +902,16 @@
     margin-top:4px;
   }
 
+  /* 幅が狭いとき：タイトルを1段目に、更新ボタンと検索・各ボタンを2段目に並べる */
+  @media (max-width:960px){
+    .brand{order:-1;flex:1 1 100%;}
+    .header-right{flex:1 1 0;min-width:0;justify-content:flex-end;}
+    .search-wrap.compact{flex:1 1 auto;min-width:70px;max-width:260px;width:auto;}
+  }
+  @media (max-width:480px){
+    .refresh-label{display:none;}
+    .refresh-btn{padding:0;width:44px;}
+  }
   @media (max-width:480px){
     header{padding:14px 16px;}
     main{padding:20px 14px 48px;}
@@ -885,6 +921,13 @@
 <body>
 
 <header>
+  <button class="refresh-btn" id="refreshBtn" aria-label="ページを更新">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M21 12a9 9 0 11-3-6.7"/>
+      <path d="M21 4v5h-5"/>
+    </svg>
+    <span class="refresh-label">更新</span>
+  </button>
   <div class="brand">
     <span class="brand-text">函館日産自動車　Service Portal</span>
   </div>
@@ -2151,6 +2194,12 @@
     savedTheme = 'dark';
   }
   applyTheme(savedTheme);
+
+  // ---------- 更新ボタン（ページを読み込み直す）----------
+  document.getElementById('refreshBtn').addEventListener('click', function(){
+    this.classList.add('spinning');
+    setTimeout(function(){ location.reload(); }, 150);
+  });
 
   document.getElementById('themeToggle').addEventListener('click', function(){
     var current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
